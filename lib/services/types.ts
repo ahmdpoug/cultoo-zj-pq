@@ -42,11 +42,11 @@ export interface ArenaService {
 }
 
 export interface TournamentService {
-  enter(tournamentId: string, entry: number): Promise<TxReceipt>
+  enter(tournamentId: string): Promise<TxReceipt>
 }
 
 export interface OnboardingService {
-  createPlayer(handle: string, opts?: { demo?: boolean }): Promise<{ card: CultCard; profile: XProfile }>
+  createPlayer(handle: string): Promise<{ card: CultCard; profile: XProfile }>
 }
 
 export interface CultServices {

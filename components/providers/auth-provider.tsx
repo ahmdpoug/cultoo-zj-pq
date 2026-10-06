@@ -1,11 +1,10 @@
 'use client'
 
-import { useEffect, useMemo, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, type ReactNode } from 'react'
 import { PrivyProvider, usePrivy, useWallets } from '@privy-io/react-auth'
 import { CultAuthContext, GUEST_AUTH, type CultAuth } from '@/lib/auth/cult-auth'
 import { fullSizeAvatar, registerAuthBridge, type XIdentity } from '@/lib/auth/bridge'
-import { gameStore } from '@/lib/store/game-store'
-import { syncMainCardFromX } from '@/lib/services/x-social'
+import { syncMainCard } from '@/lib/services'
 
 const PRIVY_APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID
 
@@ -39,6 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 function PrivyBridge({ children }: { children: ReactNode }) {
   const { ready, authenticated, user, login, logout, linkTwitter, getAccessToken } = usePrivy()
   const { wallets } = useWallets()
+  const syncedFor = useRef<string | null>(null)
 
   const twitter = user?.twitter
   const x: XIdentity | null = useMemo(
@@ -56,23 +56,12 @@ function PrivyBridge({ children }: { children: ReactNode }) {
     registerAuthBridge({ getAccessToken, getXIdentity: () => x })
   }, [getAccessToken, x])
 
-  useEffect(() => {
-    if (ready) gameStore.bindUser(privyId)
-  }, [ready, privyId])
-
   const xUsername = authenticated ? x?.username : undefined
   useEffect(() => {
-    if (!ready || !xUsername) return
-    void syncMainCardFromX(xUsername)
+    if (!ready || !xUsername || syncedFor.current === xUsername) return
+    syncedFor.current = xUsername
+    void syncMainCard()
   }, [ready, xUsername, privyId])
-
-  useEffect(() => {
-    if (!ready) return
-    const address = authenticated ? walletAddress : null
-    if (gameStore.getSnapshot().wallet.address !== address) {
-      gameStore.set((s) => ({ ...s, wallet: { address } }))
-    }
-  }, [ready, authenticated, walletAddress, privyId])
 
   const value: CultAuth = useMemo(
     () => ({

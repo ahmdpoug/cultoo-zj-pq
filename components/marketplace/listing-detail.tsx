@@ -10,7 +10,7 @@ import { CultCardView } from '@/components/cards/cult-card'
 import { NftDetails } from '@/components/cards/nft-details'
 import { CultButton, CultLink } from '@/components/ui-kit/cult-button'
 import { Modal } from '@/components/ui-kit/modal'
-import { Panel, RarityBadge, SimulatedTag, StatBar } from '@/components/ui-kit/primitives'
+import { Panel, RarityBadge, StatBar } from '@/components/ui-kit/primitives'
 import { cardNo, num } from '@/lib/game/format'
 import { cultPower, winRate } from '@/lib/game/scoring'
 
@@ -67,8 +67,8 @@ export function ListingDetail({ listing }: { listing: Listing }) {
                 Buy Card
               </CultButton>
             ) : (
-              <CultLink href="/scan?demo=1" size="lg">
-                Enter Demo to Buy
+              <CultLink href="/scan" size="lg">
+                Scan to Buy
               </CultLink>
             )}
           </Panel>
@@ -107,7 +107,7 @@ export function ListingDetail({ listing }: { listing: Listing }) {
             <p className="flex items-center gap-2 font-semibold text-success">
               <CheckCircle2 className="size-4" aria-hidden /> @{card.handle} added to your collection
             </p>
-            <p className="break-all font-mono text-xs text-muted-foreground">Mock tx: {tx.hash}</p>
+            <p className="break-all font-mono text-xs text-muted-foreground">Receipt: {tx.hash}</p>
             <CultLink href="/forge" variant="outline" className="w-full">
               Take it to The Forge
             </CultLink>
@@ -126,7 +126,6 @@ export function ListingDetail({ listing }: { listing: Listing }) {
               <span className="text-muted-foreground">Your balance</span>
               <span className="tabular-nums">{num(state.economy.balance)} $CULT</span>
             </div>
-            <SimulatedTag />
             {error && <p role="alert" className="text-destructive">{error}</p>}
             <CultButton className="w-full" onClick={buy} loading={busy}>
               {busy ? 'Processing' : 'Confirm Purchase'}

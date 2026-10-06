@@ -5,9 +5,7 @@ import Link from 'next/link'
 import { LogOut, Shield, Star, Trophy, Shield as ShieldIcon } from 'lucide-react'
 import type { CultCard } from '@/lib/types'
 import { useGame } from '@/hooks/use-game'
-import { GUILDS } from '@/lib/data/world'
-import { guildForHandle } from '@/lib/data/users'
-import { seasonRank } from '@/lib/game/season'
+import { useGuilds, useLeaderboard } from '@/hooks/use-data'
 import { rankForLevel } from '@/lib/game/progression'
 import { ARCHETYPE_LABEL, cultPower, winRate } from '@/lib/game/scoring'
 import { RARITY_META, compareRarity } from '@/lib/game/rarity'
@@ -21,10 +19,13 @@ import { Modal } from '@/components/ui-kit/modal'
 
 export function ProfileView({ card }: { card: CultCard }) {
   const { state, setMainCard, reset } = useGame()
+  const { data: guilds } = useGuilds()
+  const { data: board } = useLeaderboard()
   const [confirmReset, setConfirmReset] = useState(false)
   const power = cultPower(card)
   const rank = rankForLevel(card.level)
-  const guild = GUILDS.find((g) => g.id === (guildForHandle(card.handle) ?? GUILDS.find((x) => x.archetype === card.archetype)?.id)) ?? GUILDS[0]
+  const myRank = board?.myRank ?? null
+  const guild = guilds?.find((g) => g.id === state.guildId) ?? guilds?.find((g) => g.archetype === card.archetype) ?? guilds?.[0]
   const collection = [...state.cards].sort((a, b) => compareRarity(b.rarity, a.rarity) || b.level - a.level)
   const totalWins = state.battles.filter((b) => b.result === 'victory').length
 
@@ -42,16 +43,18 @@ export function ProfileView({ card }: { card: CultCard }) {
             <p className="text-muted-foreground">
               @{card.handle} · {ARCHETYPE_LABEL[card.archetype]} · <span className="font-semibold uppercase text-primary">{rank.title}</span>
             </p>
-            <Link href="/guilds" className="mt-3 inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-sm hover:border-primary/40">
-              <ShieldIcon className="size-4 text-primary" aria-hidden /> {guild.name}
-            </Link>
+            {guild && (
+              <Link href="/guilds" className="mt-3 inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-3 py-1.5 text-sm hover:border-primary/40">
+                <ShieldIcon className="size-4 text-primary" aria-hidden /> {guild.name}
+              </Link>
+            )}
           </div>
           <div className="flex gap-2">
             <CultLink href="/card" variant="outline" size="sm">
               My Card
             </CultLink>
             <CultButton variant="ghost" size="sm" onClick={() => setConfirmReset(true)} icon={<LogOut className="size-4" />}>
-              Reset Demo
+              Reset Profile
             </CultButton>
           </div>
         </div>
@@ -59,7 +62,7 @@ export function ProfileView({ card }: { card: CultCard }) {
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <StatTile label="Cult Power" value={num(power)} />
-        <StatTile label="Season Rank" value={`#${num(seasonRank(power))}`} />
+        <StatTile label="Season Rank" value={myRank ? `#${num(myRank)}` : '—'} />
         <StatTile label="Level" value={card.level} hint={rank.title} />
         <StatTile label="Win Rate" value={`${winRate(card)}%`} hint={`${card.wins}W / ${card.losses}L`} />
       </div>
@@ -122,7 +125,7 @@ export function ProfileView({ card }: { card: CultCard }) {
                 {c.id === state.mainCardId ? (
                   <span className="text-primary">Main</span>
                 ) : (
-                  <button type="button" onClick={() => setMainCard(c.id)} className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
+                  <button type="button" onClick={() => void setMainCard(c.id)} className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
                     Set main
                   </button>
                 )}
@@ -132,15 +135,15 @@ export function ProfileView({ card }: { card: CultCard }) {
         </ul>
       </section>
 
-      <Modal open={confirmReset} onClose={() => setConfirmReset(false)} title="Reset demo?">
-        <p className="text-sm text-muted-foreground">This clears your local demo profile, cards, balance and history from this browser.</p>
+      <Modal open={confirmReset} onClose={() => setConfirmReset(false)} title="Reset profile?">
+        <p className="text-sm text-muted-foreground">This permanently clears your cards, balance and history from the CULT database.</p>
         <div className="mt-6 grid grid-cols-2 gap-3">
           <CultButton variant="outline" onClick={() => setConfirmReset(false)}>
             Cancel
           </CultButton>
           <CultButton
             onClick={() => {
-              reset()
+              void reset()
               setConfirmReset(false)
             }}
             icon={<Shield className="size-4" />}

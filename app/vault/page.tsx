@@ -7,7 +7,7 @@ import { EconomyDashboard } from '@/components/economy/economy-dashboard'
 export default function VaultPage() {
   return (
     <>
-      <PageHeader eyebrow="Sector 05 · The Vault" title="Cult Economy" subtitle="Your balance, materials and daily quests. Every transaction here is simulated locally." />
+      <PageHeader eyebrow="Sector 05 · The Vault" title="Cult Economy" subtitle="Your balance, materials and daily quests, tracked in the CULT database." />
       <PlayerGate>{() => <EconomyDashboard />}</PlayerGate>
     </>
   )

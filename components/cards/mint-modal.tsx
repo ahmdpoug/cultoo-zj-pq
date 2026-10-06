@@ -5,7 +5,7 @@ import { CheckCircle2, Gem } from 'lucide-react'
 import type { CultCard, TxReceipt } from '@/lib/types'
 import { Modal } from '@/components/ui-kit/modal'
 import { CultButton } from '@/components/ui-kit/cult-button'
-import { RarityBadge, SimulatedTag } from '@/components/ui-kit/primitives'
+import { RarityBadge } from '@/components/ui-kit/primitives'
 import { services } from '@/lib/services'
 import { cardNo } from '@/lib/game/format'
 import { CultCardView } from './cult-card'
@@ -37,14 +37,13 @@ export function MintModal({ card, open, onClose }: { card: CultCard; open: boole
         <div className="w-full flex-1 space-y-3 text-sm">
           <div className="flex items-center gap-2">
             <RarityBadge rarity={card.rarity} />
-            <SimulatedTag />
           </div>
           <p className="font-display text-lg font-bold">CULT CARD {cardNo(card.number)}</p>
           <dl className="space-y-1.5 text-muted-foreground">
             <Row k="Season" v="Genesis" />
             <Row k="Edition" v={card.edition} />
             <Row k="Owner" v={`@${card.owner}`} />
-            <Row k="Network fee" v="0 (demo)" />
+            <Row k="Network fee" v="0" />
           </dl>
         </div>
       </div>
@@ -52,14 +51,13 @@ export function MintModal({ card, open, onClose }: { card: CultCard; open: boole
       {step === 'done' && tx ? (
         <div className="mt-6 rounded-xl border border-success/30 bg-success/10 p-4 text-sm">
           <p className="flex items-center gap-2 font-semibold text-success">
-            <CheckCircle2 className="size-4" aria-hidden /> Mint simulated successfully
+            <CheckCircle2 className="size-4" aria-hidden /> Card minted
           </p>
-          <p className="mt-2 break-all font-mono text-xs text-muted-foreground">Mock tx: {tx.hash}</p>
-          <p className="mt-2 text-xs text-muted-foreground">No blockchain transaction was made. Connect a real NFT contract in lib/services.</p>
+          <p className="mt-2 break-all font-mono text-xs text-muted-foreground">Receipt: {tx.hash}</p>
         </div>
       ) : (
         <p className="mt-6 text-xs leading-relaxed text-muted-foreground">
-          This is a demo. Minting is simulated locally — no wallet signature, network fee or on-chain record is created.
+          Minting records this card as a collectible in your CULT collection.
         </p>
       )}
 

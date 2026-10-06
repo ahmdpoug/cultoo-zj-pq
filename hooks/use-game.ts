@@ -1,19 +1,50 @@
 'use client'
 
 import { useSyncExternalStore } from 'react'
-import { gameStore as store } from '@/lib/store/game-store'
+import useSWR from 'swr'
+import type { GameState } from '@/lib/types'
+import { useCultAuth } from '@/lib/auth/cult-auth'
+import { apiFetch, STATE_KEY } from '@/lib/services/api'
+import { resetPlayer, setMainCard } from '@/lib/services'
 import { cultPower } from '@/lib/game/scoring'
 
+export const EMPTY_STATE: GameState = {
+  version: 2,
+  mainCardId: null,
+  cards: [],
+  wallet: { address: null },
+  economy: { balance: 0, pendingCult: 0, fragments: 0, materials: 0, seasonXp: 0 },
+  battles: [],
+  achievements: [],
+  quests: {},
+  claimedQuests: [],
+  tournaments: [],
+  guildId: null,
+  listings: [],
+  rewardedBattlesToday: 0,
+  activity: [],
+}
+
+/** Server-authoritative game state for the signed-in player. */
 export function useGame() {
-  const state = useSyncExternalStore(store.subscribe, store.getSnapshot, store.getServerSnapshot)
+  const auth = useCultAuth()
+  const { data, isLoading, mutate } = useSWR<GameState>(auth.authenticated ? STATE_KEY : null, (url: string) => apiFetch<GameState>(url), {
+    revalidateOnFocus: false,
+    keepPreviousData: true,
+  })
+
+  const state = data ?? EMPTY_STATE
   const mainCard = state.cards.find((c) => c.id === state.mainCardId) ?? null
+
   return {
     state,
     mainCard,
     hasPlayer: Boolean(mainCard),
     totalPower: mainCard ? cultPower(mainCard) : 0,
-    reset: store.reset,
-    setMainCard: (id: string) => store.set((s) => ({ ...s, mainCardId: id })),
+    isLoading: auth.authenticated && isLoading,
+    reset: resetPlayer,
+    setMainCard,
+    mutate,
   }
 }
 

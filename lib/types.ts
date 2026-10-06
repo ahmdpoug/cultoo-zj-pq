@@ -117,6 +117,11 @@ export interface Guild {
   leader: string
 }
 
+export interface GuildView extends Guild {
+  memberHandles: string[]
+  leaderCtScore: number | null
+}
+
 export interface Quest {
   id: string
   title: string
@@ -169,6 +174,16 @@ export interface GameState {
   listings: { id: string; cardId: string; price: number }[]
   rewardedBattlesToday: number
   activity: ActivityItem[]
+}
+
+export interface SeasonInfo {
+  id: string
+  name: string
+  label: string
+  endsAt: number
+  qualifyTop: number
+  players: number
+  prizePool: number
 }
 
 export interface ChainInfo {

@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
-import { ArrowRight, AtSign, RotateCcw, ScanLine, Share2, Sparkles, Swords } from 'lucide-react'
+import { ArrowRight, AtSign, RotateCcw, ScanLine, Share2, Swords } from 'lucide-react'
 import type { CultCard, XProfile } from '@/lib/types'
 import { services, XLookupError } from '@/lib/services'
 import { useCultAuth } from '@/lib/auth/cult-auth'
@@ -10,7 +10,7 @@ import { CardAvatar } from '@/components/cards/card-avatar'
 import { XLogo } from '@/components/layout/account-button'
 import { useGame } from '@/hooks/use-game'
 import { CultButton } from '@/components/ui-kit/cult-button'
-import { Panel, RarityBadge, SimulatedTag } from '@/components/ui-kit/primitives'
+import { Panel, RarityBadge } from '@/components/ui-kit/primitives'
 import { Particles } from '@/components/ui-kit/particles'
 import { CultCardView } from '@/components/cards/cult-card'
 import { ShareModal } from '@/components/cards/share-modal'
@@ -22,9 +22,8 @@ import { cn } from '@/lib/utils'
 type Phase = 'idle' | 'scanning' | 'profile' | 'reveal'
 
 const SCAN_STEPS = ['Reading timeline', 'Measuring influence', 'Weighing reputation', 'Calculating alpha', 'Striking card']
-const DEMO_HANDLES = ['nightshift', 'basedlord', 'onchainoracle', 'gmprophet', 'zeroknowledge', 'apexdegen', 'cultmaxi', 'liquidsoul', 'shadowfarm']
 
-export function CTScanner({ autoDemo = false }: { autoDemo?: boolean }) {
+export function CTScanner() {
   const router = useRouter()
   const { state } = useGame()
   const [handle, setHandle] = useState('')
@@ -33,10 +32,9 @@ export function CTScanner({ autoDemo = false }: { autoDemo?: boolean }) {
   const [result, setResult] = useState<{ card: CultCard; profile: XProfile } | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [shareOpen, setShareOpen] = useState(false)
-  const demoStarted = useRef(false)
   const isFirstCard = !state.mainCardId || state.mainCardId === result?.card.id
 
-  async function run(raw: string, demo = false) {
+  async function run(raw: string) {
     const clean = normalizeHandle(raw)
     if (!clean) {
       setError('Enter a valid X username (letters, numbers, underscore).')
@@ -49,7 +47,7 @@ export function CTScanner({ autoDemo = false }: { autoDemo?: boolean }) {
     const ticker = setInterval(() => setStep((s) => Math.min(s + 1, SCAN_STEPS.length - 1)), 480)
     let res: Awaited<ReturnType<typeof services.onboarding.createPlayer>>
     try {
-      ;[res] = await Promise.all([services.onboarding.createPlayer(clean, { demo }), new Promise((r) => setTimeout(r, 2500))])
+      ;[res] = await Promise.all([services.onboarding.createPlayer(clean), new Promise((r) => setTimeout(r, 2500))])
     } catch (err) {
       setError(err instanceof XLookupError ? err.message : 'Could not reach X right now. Try again.')
       setPhase('idle')
@@ -61,19 +59,6 @@ export function CTScanner({ autoDemo = false }: { autoDemo?: boolean }) {
     setPhase('profile')
     setTimeout(() => setPhase('reveal'), 1800)
   }
-
-  function demo() {
-    const name = DEMO_HANDLES[Math.floor(Math.random() * DEMO_HANDLES.length)] + Math.floor(Math.random() * 99)
-    void run(name, true)
-  }
-
-  useEffect(() => {
-    if (autoDemo && !demoStarted.current) {
-      demoStarted.current = true
-      demo()
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoDemo])
 
   function onSubmit(e: FormEvent) {
     e.preventDefault()
@@ -115,16 +100,13 @@ export function CTScanner({ autoDemo = false }: { autoDemo?: boolean }) {
                 {error}
               </p>
             )}
-            <div className="mt-5 grid gap-3 sm:grid-cols-2">
-              <CultButton type="submit" size="lg" icon={<ScanLine className="size-4" />}>
+            <div className="mt-5">
+              <CultButton type="submit" size="lg" className="w-full" icon={<ScanLine className="size-4" />}>
                 Generate Card
-              </CultButton>
-              <CultButton type="button" size="lg" variant="outline" onClick={demo} icon={<Sparkles className="size-4" />}>
-                Enter Demo
               </CultButton>
             </div>
             <p className="mt-5 text-xs leading-relaxed text-muted-foreground">
-              Signed-in scans pull live public metrics from X. Demo mode uses generated profile data and needs no login.
+              Scans pull live public metrics from X. Connect your X account to strike a card from your real profile.
             </p>
           </form>
         </Panel>
@@ -192,13 +174,9 @@ export function CTScanner({ autoDemo = false }: { autoDemo?: boolean }) {
         <Panel className="p-6 sm:p-8">
           <div className="flex items-center justify-between gap-3">
             <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Profile analyzed</p>
-            {profile.source === 'x' ? (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-success/30 bg-success/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-success">
-                <span aria-hidden className="size-1.5 rounded-full bg-success" /> Live X data
-              </span>
-            ) : (
-              <SimulatedTag />
-            )}
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-success/30 bg-success/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-success">
+              <span aria-hidden className="size-1.5 rounded-full bg-success" /> Live X data
+            </span>
           </div>
           <div className="mt-3 flex items-center gap-3">
             {profile.avatarUrl && <CardAvatar handle={profile.handle} src={profile.avatarUrl} className="size-12" />}

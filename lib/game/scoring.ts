@@ -2,8 +2,6 @@ import type { Archetype, CardStats, CultCard, Rarity, XProfile } from '@/lib/typ
 import { createRng, hashString } from './rng'
 import { rarityFromScore } from './rarity'
 
-const ARCHETYPES: readonly Archetype[] = ['trader', 'builder', 'meme', 'alpha', 'og', 'researcher']
-
 export const ARCHETYPE_LABEL: Record<Archetype, string> = {
   trader: 'Trader',
   builder: 'Builder',
@@ -15,26 +13,6 @@ export const ARCHETYPE_LABEL: Record<Archetype, string> = {
 
 export function normalizeHandle(raw: string) {
   return raw.trim().replace(/^@+/, '').replace(/[^a-zA-Z0-9_]/g, '').slice(0, 15)
-}
-
-/** Deterministic mock X profile. Replace with a real X API call in services/social. */
-export function mockXProfile(handleRaw: string, boost = 0): XProfile {
-  const handle = normalizeHandle(handleRaw) || 'anon'
-  const rng = createRng(handle.toLowerCase())
-  const skew = (min: number, max: number) => Math.min(99, Math.round(min + (max - min) * Math.sqrt(rng.next())) + boost)
-  const followers = Math.round(Math.pow(10, rng.float(2.6, 5.6)))
-  return {
-    handle,
-    displayName: handle.charAt(0).toUpperCase() + handle.slice(1),
-    followers,
-    following: rng.int(120, 3200),
-    accountAgeYears: Math.round(rng.float(0.8, 14) * 10) / 10,
-    ctActivity: skew(50, 99),
-    engagement: skew(48, 99),
-    influence: Math.min(99, Math.round(40 + Math.log10(followers) * 10 + rng.int(-4, 4)) + boost),
-    alpha: skew(45, 99),
-    archetype: rng.pick(ARCHETYPES),
-  }
 }
 
 export function computeStats(p: XProfile): CardStats {

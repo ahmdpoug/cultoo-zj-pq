@@ -73,6 +73,8 @@ export const TOURNAMENT_TEMPLATES: TournamentTemplate[] = [
   { slug: 'genesis-cup', name: 'Genesis Cup', tagline: 'The first blood of the season.', entry: 500, maxPlayers: 1024, minRarity: 'rare' },
 ]
 
+export const BRACKET_ROUNDS = [1024, 512, 256, 128, 64, 32, 16, 8, 4, 2]
+
 /** Share of the entry pool paid out; the rest stays in the treasury. */
 export const TOURNAMENT_PAYOUT_RATIO = 0.9
 export const TOURNAMENT_SPLITS = [0.6, 0.3, 0.1]

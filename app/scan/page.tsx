@@ -4,8 +4,7 @@ import { PageHeader } from '@/components/ui-kit/primitives'
 
 export const metadata: Metadata = { title: 'Scan Your CT' }
 
-export default async function ScanPage({ searchParams }: { searchParams: Promise<{ demo?: string }> }) {
-  const { demo } = await searchParams
+export default function ScanPage() {
   return (
     <>
       <PageHeader
@@ -13,7 +12,7 @@ export default async function ScanPage({ searchParams }: { searchParams: Promise
         title="Scan Your CT"
         subtitle="Enter an X username. We read the footprint, weigh the reputation, and strike a card that is yours alone."
       />
-      <CTScanner key={demo ?? 'manual'} autoDemo={demo === '1'} />
+      <CTScanner />
     </>
   )
 }

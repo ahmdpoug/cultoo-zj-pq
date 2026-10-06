@@ -3,13 +3,14 @@
 import { useState } from 'react'
 import { CheckCircle2, Clock, Crown, Users } from 'lucide-react'
 import type { Tournament } from '@/lib/types'
-import { BRACKET_ROUNDS, TOURNAMENTS } from '@/lib/data/world'
+import { BRACKET_ROUNDS } from '@/lib/game/config'
+import { useTournaments } from '@/hooks/use-data'
 import { useGame, useMounted } from '@/hooks/use-game'
 import { services, InsufficientBalanceError } from '@/lib/services'
 import { RARITY_META, compareRarity } from '@/lib/game/rarity'
 import { compact, num } from '@/lib/game/format'
 import { CultButton } from '@/components/ui-kit/cult-button'
-import { Panel, RarityBadge } from '@/components/ui-kit/primitives'
+import { EmptyState, Panel, RarityBadge, Skeleton } from '@/components/ui-kit/primitives'
 import { cn } from '@/lib/utils'
 
 const STATUS: Record<Tournament['status'], { label: string; cls: string }> = {
@@ -28,17 +29,19 @@ function startLabel(h: number) {
 export function TournamentBoard() {
   const mounted = useMounted()
   const { state, mainCard } = useGame()
-  const [active, setActive] = useState<string>(TOURNAMENTS[0].id)
+  const { data, isLoading } = useTournaments()
+  const tournaments = data ?? []
+  const [active, setActive] = useState<string | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
   const [msg, setMsg] = useState<{ id: string; text: string } | null>(null)
-  const tournament = TOURNAMENTS.find((t) => t.id === active)!
+  const tournament = tournaments.find((t) => t.id === active) ?? tournaments[0]
 
   async function enter(t: Tournament) {
     setBusy(t.id)
     setMsg(null)
     try {
-      await services.tournament.enter(t.id, t.entry)
-      setMsg({ id: t.id, text: 'Entry confirmed (simulated).' })
+      await services.tournament.enter(t.id)
+      setMsg({ id: t.id, text: 'Entry confirmed.' })
     } catch (e) {
       setMsg({ id: t.id, text: e instanceof InsufficientBalanceError ? 'Not enough $CULT.' : (e as Error).message })
     } finally {
@@ -46,19 +49,32 @@ export function TournamentBoard() {
     }
   }
 
+  if (isLoading && tournaments.length === 0) {
+    return (
+      <div className="space-y-8">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {[0, 1, 2].map((i) => (
+            <Skeleton key={i} className="h-64" />
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  if (tournaments.length === 0) {
+    return <EmptyState icon={<Crown className="size-6" />} title="No tournaments scheduled" description="Weekly brackets open every Monday. Check back soon." />
+  }
+
   return (
     <div className="space-y-8">
       <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {TOURNAMENTS.map((t) => {
+        {tournaments.map((t) => {
           const entered = mounted && state.tournaments.includes(t.id)
           const eligible = mainCard ? compareRarity(mainCard.rarity, t.minRarity) >= 0 : false
           const canEnter = (t.status === 'registering' || t.status === 'upcoming') && !entered
           return (
             <li key={t.id}>
-              <Panel
-                as="article"
-                className={cn('flex h-full flex-col p-5 transition-colors', active === t.id && 'border-primary/40')}
-              >
+              <Panel as="article" className={cn('flex h-full flex-col p-5 transition-colors', active === t.id && 'border-primary/40')}>
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <h3 className="font-display text-xl font-bold uppercase">{t.name}</h3>
@@ -88,7 +104,7 @@ export function TournamentBoard() {
                   </div>
                 </dl>
                 <div className="mt-4 h-1 overflow-hidden rounded-full bg-white/[0.06]">
-                  <div className="h-full rounded-full bg-primary/80" style={{ width: `${(t.players / t.maxPlayers) * 100}%` }} />
+                  <div className="h-full rounded-full bg-primary/80" style={{ width: `${Math.min(100, (t.players / t.maxPlayers) * 100)}%` }} />
                 </div>
                 <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
                   <span className="flex items-center gap-1.5">
@@ -126,7 +142,7 @@ export function TournamentBoard() {
         })}
       </ul>
 
-      <Bracket tournament={tournament} />
+      {tournament && <Bracket tournament={tournament} />}
     </div>
   )
 }

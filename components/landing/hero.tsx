@@ -1,15 +1,18 @@
-import { ScanLine, Sparkles, Swords } from 'lucide-react'
+'use client'
+
+import { ScanLine, Swords } from 'lucide-react'
 import { CultLink } from '@/components/ui-kit/cult-button'
 import { Particles } from '@/components/ui-kit/particles'
 import { CultCardView } from '@/components/cards/cult-card'
-import { buildCard, mockXProfile } from '@/lib/game/scoring'
-import { SEASON } from '@/lib/data/world'
+import { useLeaderboard, usePool } from '@/hooks/use-data'
 import { compact } from '@/lib/game/format'
-import Link from 'next/link'
-
-const HERO_CARD = { ...buildCard({ ...mockXProfile('cultlegend', 9), displayName: 'Cult Legend', archetype: 'alpha' }, { rarity: 'legendary', level: 52 }), number: 421 }
 
 export function Hero() {
+  const { data: pool } = usePool()
+  const { data: board } = useLeaderboard()
+  const heroCard = pool?.find((c) => c.rarity === 'legendary') ?? pool?.find((c) => c.rarity === 'epic') ?? pool?.[0] ?? null
+  const season = board?.season
+
   return (
     <section className="relative -mt-8 grid items-center gap-12 overflow-hidden pb-16 pt-8 md:-mt-12 md:pt-16 lg:grid-cols-[1.1fr_1fr] lg:gap-6 lg:pb-24">
       <div aria-hidden className="absolute inset-0 -z-10 grid-bg opacity-60" />
@@ -20,7 +23,7 @@ export function Hero() {
             <span className="absolute inset-0 animate-ping rounded-full bg-primary opacity-60" />
             <span className="relative size-2 rounded-full bg-primary" />
           </span>
-          {SEASON.label} · Live
+          {season?.label ?? 'Genesis — Season 01'} · Live
         </p>
 
         <h1 className="mt-6 font-display font-bold leading-[0.85] tracking-tight">
@@ -40,19 +43,12 @@ export function Hero() {
             Enter The Arena
           </CultLink>
         </div>
-        <Link
-          href="/scan?demo=1"
-          className="mt-4 inline-flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <Sparkles className="size-4 text-primary" aria-hidden />
-          No account? <span className="font-semibold text-foreground underline-offset-4 hover:underline">Enter Demo</span>
-        </Link>
 
         <dl className="mx-auto mt-10 grid max-w-md grid-cols-3 gap-px overflow-hidden rounded-xl border border-white/[0.06] bg-white/[0.06] lg:mx-0">
           {[
-            ['Players', compact(SEASON.players)],
-            ['Cards forged', '312K'],
-            ['Battles today', '86.4K'],
+            ['Players', season ? compact(season.players) : '—'],
+            ['Prize pool', season ? compact(season.prizePool) : '—'],
+            ['Qualify', season ? `Top ${season.qualifyTop}` : '—'],
           ].map(([k, v]) => (
             <div key={k} className="bg-background/80 px-4 py-3">
               <dt className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">{k}</dt>
@@ -67,9 +63,13 @@ export function Hero() {
         <div aria-hidden className="absolute size-[30rem] rounded-full border border-white/[0.05]" />
         <div aria-hidden className="absolute size-[22rem] rounded-full border border-primary/15" />
         <Particles count={28} seed="hero" />
-        <div className="animate-float">
-          <CultCardView card={HERO_CARD} size="xl" />
-        </div>
+        {heroCard ? (
+          <div className="animate-float">
+            <CultCardView card={heroCard} size="xl" />
+          </div>
+        ) : (
+          <div className="aspect-[5/7] w-72 animate-pulse rounded-2xl border border-white/10 bg-card sm:w-80" aria-hidden />
+        )}
         <div aria-hidden className="absolute bottom-6 h-6 w-56 rounded-full bg-black/80 blur-xl" />
       </div>
     </section>

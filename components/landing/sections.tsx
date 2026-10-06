@@ -1,10 +1,11 @@
+'use client'
+
 import { AtSign, Gem, Hammer, ScanLine, Swords, Trophy, ArrowRight } from 'lucide-react'
 import { CultCardView } from '@/components/cards/cult-card'
 import { CultLink } from '@/components/ui-kit/cult-button'
 import { Eyebrow } from '@/components/ui-kit/primitives'
 import { RARITIES, RARITY_META } from '@/lib/game/rarity'
-import { MOCK_CARDS } from '@/lib/data/users'
-import { SEASON } from '@/lib/data/world'
+import { useLeaderboard, usePool } from '@/hooks/use-data'
 import { compact } from '@/lib/game/format'
 
 const MANIFESTO = [
@@ -67,7 +68,8 @@ export function HowItWorks() {
 }
 
 export function RarityShowcase() {
-  const samples = RARITIES.map((r) => MOCK_CARDS.find((c) => c.rarity === r)!).filter(Boolean)
+  const { data: pool } = usePool()
+  const samples = RARITIES.map((r) => pool?.find((c) => c.rarity === r)).filter((c): c is NonNullable<typeof c> => Boolean(c))
   return (
     <section className="py-12">
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
@@ -79,22 +81,32 @@ export function RarityShowcase() {
           Rarity is earned from your CT Score and upgraded in The Forge. Every tier carries its own frame, surface and energy.
         </p>
       </div>
-      <div className="-mx-4 mt-10 flex snap-x snap-mandatory gap-5 overflow-x-auto px-4 pb-6 [scrollbar-width:none] lg:mx-0 lg:grid lg:grid-cols-5 lg:overflow-visible lg:px-0">
-        {samples.map((card) => (
-          <div key={card.rarity} className="snap-center">
-            <CultCardView card={card} size="md" className="lg:w-full" />
-            <p data-rarity={card.rarity} className="mt-4 font-display text-sm font-bold uppercase tracking-[0.25em] rarity-text">
-              {RARITY_META[card.rarity].label}
-            </p>
-            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{RARITY_META[card.rarity].description}</p>
-          </div>
-        ))}
-      </div>
+      {samples.length === 0 ? (
+        <div className="mt-10 grid gap-5 lg:grid-cols-5">
+          {RARITIES.map((r) => (
+            <div key={r} className="aspect-[5/7] animate-pulse rounded-2xl border border-white/10 bg-card" aria-hidden />
+          ))}
+        </div>
+      ) : (
+        <div className="-mx-4 mt-10 flex snap-x snap-mandatory gap-5 overflow-x-auto px-4 pb-6 [scrollbar-width:none] lg:mx-0 lg:grid lg:grid-cols-5 lg:overflow-visible lg:px-0">
+          {samples.map((card) => (
+            <div key={card.rarity} className="snap-center">
+              <CultCardView card={card} size="md" className="lg:w-full" />
+              <p data-rarity={card.rarity} className="mt-4 font-display text-sm font-bold uppercase tracking-[0.25em] rarity-text">
+                {RARITY_META[card.rarity].label}
+              </p>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{RARITY_META[card.rarity].description}</p>
+            </div>
+          ))}
+        </div>
+      )}
     </section>
   )
 }
 
 export function ChampionshipTeaser() {
+  const { data } = useLeaderboard()
+  const season = data?.season
   return (
     <section className="relative mt-20 overflow-hidden rounded-3xl border border-primary/20 bg-[radial-gradient(80%_120%_at_80%_50%,oklch(0.35_0.16_296/0.45),transparent_70%)] p-8 sm:p-12">
       <div aria-hidden className="absolute inset-0 grid-bg opacity-40" />
@@ -102,7 +114,7 @@ export function ChampionshipTeaser() {
         <Eyebrow>Flagship Event</Eyebrow>
         <h2 className="mt-4 font-display text-3xl font-bold uppercase tracking-tight metal-text sm:text-5xl">CULT CT Championship</h2>
         <p className="mt-3 text-muted-foreground">
-          {SEASON.label}. {compact(SEASON.players)} players chasing {SEASON.qualifyTop} final seats. Only one becomes CT Champion.
+          {season?.label ?? 'Genesis — Season 01'}. {season ? compact(season.players) : '—'} players chasing {season?.qualifyTop ?? 100} final seats. Only one becomes CT Champion.
         </p>
         <div className="mt-8 flex flex-wrap gap-3">
           <CultLink href="/championships" icon={<Trophy className="size-4" />}>

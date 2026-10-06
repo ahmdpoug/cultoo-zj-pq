@@ -4,7 +4,7 @@ import { Boxes, Brush, CalendarDays, Coins, Hammer, Puzzle, Shield, Sparkles, Ti
 import { useGame } from '@/hooks/use-game'
 import { num, timeAgo } from '@/lib/game/format'
 import { CultMark } from '@/components/layout/cult-logo'
-import { Panel, SimulatedTag } from '@/components/ui-kit/primitives'
+import { Panel } from '@/components/ui-kit/primitives'
 import { DailyQuests } from './daily-quests'
 
 const USES = [
@@ -30,14 +30,13 @@ export function EconomyDashboard() {
           <div aria-hidden className="absolute -right-16 -top-16 size-64 rounded-full bg-primary/20 blur-3xl" />
           <div className="relative flex items-center justify-between">
             <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">$CULT Balance</p>
-            <SimulatedTag />
           </div>
           <p className="relative mt-3 flex items-center gap-3 font-display text-5xl font-bold tabular-nums metal-text sm:text-6xl">
             <CultMark className="size-10" />
             {num(e.balance)}
           </p>
           <p className="relative mt-3 max-w-md text-sm text-muted-foreground">
-            $CULT is the conceptual utility currency of the CULT world. In this demo it is earned and spent locally and has no monetary value.
+            $CULT is the utility currency of the CULT world. It is earned and spent in-game and has no monetary value.
           </p>
         </Panel>
         <div className="grid grid-cols-2 gap-3">
@@ -69,7 +68,7 @@ export function EconomyDashboard() {
           </ul>
         </Panel>
         <Panel className="p-6">
-          <h2 className="font-display text-lg font-bold uppercase tracking-wide">Local Ledger</h2>
+          <h2 className="font-display text-lg font-bold uppercase tracking-wide">Ledger</h2>
           {ledger.length === 0 ? (
             <p className="mt-4 text-sm text-muted-foreground">No transactions yet. Battle, forge or trade to fill your ledger.</p>
           ) : (

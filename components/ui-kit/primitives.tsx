@@ -93,15 +93,6 @@ export function EmptyState({ icon, title, description, action }: { icon: ReactNo
   )
 }
 
-export function SimulatedTag({ className }: { className?: string }) {
-  return (
-    <span className={cn('inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground', className)}>
-      <span aria-hidden className="size-1.5 rounded-full bg-primary" />
-      Simulated
-    </span>
-  )
-}
-
 export function Skeleton({ className }: { className?: string }) {
   return <div className={cn('animate-pulse rounded-xl bg-white/[0.05]', className)} />
 }

@@ -9,15 +9,15 @@ export function SiteFooter() {
         <div>
           <CultLogo />
           <p className="mt-4 max-w-sm text-sm leading-relaxed text-muted-foreground">
-            CT Card Universe is a demo prototype. $CULT is a conceptual in-game utility currency with no monetary value. All wallets,
-            mints, trades and transactions shown here are simulated locally in your browser.
+            CT Card Universe turns real X profiles into collectible cards. $CULT is a conceptual in-game utility currency with no
+            monetary value, and every card, trade and battle is stored in the CULT database.
           </p>
         </div>
         <FooterCol title="Play" links={PRIMARY_NAV.slice(1, 6)} />
         <FooterCol title="Explore" links={[...SECONDARY_NAV, PRIMARY_NAV[6]]} />
       </div>
       <div className="border-t border-white/[0.06] py-5 text-center text-xs tracking-[0.2em] text-muted-foreground">
-        CT IS THE GAME · GENESIS SEASON 01 · DEMO MODE
+        CT IS THE GAME · GENESIS SEASON 01 · LIVE
       </div>
     </footer>
   )

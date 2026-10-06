@@ -16,7 +16,7 @@ export function NftDetails({ card, className }: { card: CultCard; className?: st
     [
       'Mint Status',
       <span key="m" className={cn('font-semibold', card.minted ? 'text-success' : 'text-muted-foreground')}>
-        {card.minted ? 'Minted (simulated)' : 'Not minted'}
+        {card.minted ? 'Minted' : 'Not minted'}
       </span>,
     ],
   ]

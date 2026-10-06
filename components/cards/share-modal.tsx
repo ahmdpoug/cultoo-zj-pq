@@ -8,8 +8,7 @@ import { CultButton } from '@/components/ui-kit/cult-button'
 import { RARITY_META } from '@/lib/game/rarity'
 import { cultPower } from '@/lib/game/scoring'
 import { num } from '@/lib/game/format'
-import { services } from '@/lib/services'
-import { gameStore, logActivity, progressQuest } from '@/lib/store/game-store'
+import { recordShare, services } from '@/lib/services'
 import { CultCardView } from './cult-card'
 
 export function shareText(card: CultCard) {
@@ -17,7 +16,7 @@ export function shareText(card: CultCard) {
 }
 
 function markShared() {
-  gameStore.set((s) => progressQuest(logActivity(s, 'share', 'Shared card to X'), 'share'))
+  void recordShare().catch(() => {})
 }
 
 export function ShareModal({ card, open, onClose }: { card: CultCard; open: boolean; onClose: () => void }) {

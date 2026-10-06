@@ -2,9 +2,9 @@
 
 import { Check, Eye, Repeat, Share2, Swords, Trophy, Hammer, ScanLine } from 'lucide-react'
 import type { QuestAction } from '@/lib/types'
-import { QUESTS } from '@/lib/data/world'
+import { QUESTS } from '@/lib/game/config'
 import { useGame, useMounted } from '@/hooks/use-game'
-import { gameStore, grantXp, logActivity } from '@/lib/store/game-store'
+import { claimQuest } from '@/lib/services'
 import { Eyebrow } from '@/components/ui-kit/primitives'
 import { cn } from '@/lib/utils'
 
@@ -15,16 +15,6 @@ const ICONS: Record<QuestAction, typeof Eye> = {
   tournament: Trophy,
   share: Share2,
   battle: Repeat,
-}
-
-export function claimQuest(questId: string) {
-  const quest = QUESTS.find((q) => q.id === questId)
-  if (!quest) return
-  gameStore.set((s) => {
-    if (!s.mainCardId || s.claimedQuests.includes(questId) || (s.quests[questId] ?? 0) < quest.target) return s
-    const { state } = grantXp(s, s.mainCardId, quest.xp)
-    return logActivity({ ...state, claimedQuests: [...state.claimedQuests, questId] }, 'quest', `Quest complete: ${quest.title} (+${quest.xp} XP)`)
-  })
 }
 
 export function DailyQuests({ embedded = false }: { embedded?: boolean }) {
@@ -53,10 +43,7 @@ export function DailyQuests({ embedded = false }: { embedded?: boolean }) {
           const done = progress >= q.target
           const claimed = mounted && state.claimedQuests.includes(q.id)
           return (
-            <li
-              key={q.id}
-              className={cn('glass flex flex-col rounded-2xl p-4 transition-colors', done && !claimed && 'border-primary/40', claimed && 'opacity-60')}
-            >
+            <li key={q.id} className={cn('glass flex flex-col rounded-2xl p-4 transition-colors', done && !claimed && 'border-primary/40', claimed && 'opacity-60')}>
               <div className="flex items-center justify-between">
                 <span className="flex size-9 items-center justify-center rounded-lg bg-white/5 text-primary">
                   <Icon className="size-4" aria-hidden />
@@ -79,7 +66,7 @@ export function DailyQuests({ embedded = false }: { embedded?: boolean }) {
                   <button
                     type="button"
                     disabled={!done || !hasPlayer}
-                    onClick={() => claimQuest(q.id)}
+                    onClick={() => void claimQuest(q.id).catch(() => {})}
                     className="rounded-md px-2 py-1 font-semibold uppercase tracking-wider text-foreground transition-colors enabled:bg-primary enabled:hover:brightness-110 disabled:text-muted-foreground"
                   >
                     {done ? 'Claim' : 'In progress'}

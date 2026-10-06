@@ -3,21 +3,21 @@
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { ArrowUpRight, SearchX } from 'lucide-react'
-import type { Rarity } from '@/lib/types'
-import { MOCK_LISTINGS } from '@/lib/data/listings'
+import type { Listing, Rarity } from '@/lib/types'
+import { useListings } from '@/hooks/use-data'
 import { RARITIES, RARITY_META, compareRarity } from '@/lib/game/rarity'
 import { winRate } from '@/lib/game/scoring'
 import { cardNo, num } from '@/lib/game/format'
 import { CultCardView } from '@/components/cards/cult-card'
-import { EmptyState, RarityBadge } from '@/components/ui-kit/primitives'
+import { EmptyState, RarityBadge, Skeleton } from '@/components/ui-kit/primitives'
 import { cn } from '@/lib/utils'
 
 const SORTS = {
-  newest: { label: 'Newest', fn: (a: (typeof MOCK_LISTINGS)[number], b: (typeof MOCK_LISTINGS)[number]) => b.listedAt - a.listedAt },
-  price: { label: 'Price', fn: (a: (typeof MOCK_LISTINGS)[number], b: (typeof MOCK_LISTINGS)[number]) => a.price - b.price },
-  rarity: { label: 'Rarity', fn: (a: (typeof MOCK_LISTINGS)[number], b: (typeof MOCK_LISTINGS)[number]) => compareRarity(b.card.rarity, a.card.rarity) },
-  level: { label: 'Level', fn: (a: (typeof MOCK_LISTINGS)[number], b: (typeof MOCK_LISTINGS)[number]) => b.card.level - a.card.level },
-  wins: { label: 'Wins', fn: (a: (typeof MOCK_LISTINGS)[number], b: (typeof MOCK_LISTINGS)[number]) => b.card.wins - a.card.wins },
+  newest: { label: 'Newest', fn: (a: Listing, b: Listing) => b.listedAt - a.listedAt },
+  price: { label: 'Price', fn: (a: Listing, b: Listing) => a.price - b.price },
+  rarity: { label: 'Rarity', fn: (a: Listing, b: Listing) => compareRarity(b.card.rarity, a.card.rarity) },
+  level: { label: 'Level', fn: (a: Listing, b: Listing) => b.card.level - a.card.level },
+  wins: { label: 'Wins', fn: (a: Listing, b: Listing) => b.card.wins - a.card.wins },
 } as const
 
 type SortKey = keyof typeof SORTS
@@ -25,10 +25,11 @@ type SortKey = keyof typeof SORTS
 export function MarketBrowser() {
   const [filter, setFilter] = useState<Rarity | 'all'>('all')
   const [sort, setSort] = useState<SortKey>('newest')
+  const { data, isLoading } = useListings()
 
   const listings = useMemo(
-    () => MOCK_LISTINGS.filter((l) => filter === 'all' || l.card.rarity === filter).sort(SORTS[sort].fn),
-    [filter, sort],
+    () => (data ?? []).filter((l) => filter === 'all' || l.card.rarity === filter).sort(SORTS[sort].fn),
+    [data, filter, sort],
   )
 
   return (
@@ -75,7 +76,15 @@ export function MarketBrowser() {
         <span className="font-semibold text-foreground tabular-nums">{listings.length}</span> listings
       </p>
 
-      {listings.length === 0 ? (
+      {isLoading && listings.length === 0 ? (
+        <ul className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+          {[0, 1, 2, 3].map((i) => (
+            <li key={i}>
+              <Skeleton className="h-80" />
+            </li>
+          ))}
+        </ul>
+      ) : listings.length === 0 ? (
         <div className="mt-6">
           <EmptyState icon={<SearchX className="size-6" />} title="No listings" description="No cards of this rarity are listed right now. Check back after the next forge cycle." />
         </div>

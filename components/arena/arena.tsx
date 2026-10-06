@@ -5,8 +5,8 @@ import Link from 'next/link'
 import { Crosshair, RotateCcw, Shield, Swords, Trophy } from 'lucide-react'
 import type { BattleRecord, CultCard } from '@/lib/types'
 import { useGame } from '@/hooks/use-game'
+import { usePool } from '@/hooks/use-data'
 import { services } from '@/lib/services'
-import { MOCK_CARDS } from '@/lib/data/users'
 import { BATTLE_REWARDS, BATTLE_STATS } from '@/lib/game/battle'
 import { cultPower } from '@/lib/game/scoring'
 import { num, timeAgo } from '@/lib/game/format'
@@ -23,6 +23,7 @@ type Outcome = BattleRecord & { levelsGained: number }
 
 export function Arena({ mainCard }: { mainCard: CultCard }) {
   const { state } = useGame()
+  const { data: pool } = usePool()
   const [playerId, setPlayerId] = useState(mainCard.id)
   const [opponent, setOpponent] = useState<CultCard | null>(null)
   const [phase, setPhase] = useState<Phase>('select')
@@ -34,11 +35,11 @@ export function Arena({ mainCard }: { mainCard: CultCard }) {
 
   const opponents = useMemo(
     () =>
-      [...MOCK_CARDS]
+      [...(pool ?? [])]
         .sort((a, b) => Math.abs(cultPower(a) - playerPower) - Math.abs(cultPower(b) - playerPower))
         .slice(0, 8)
         .sort((a, b) => cultPower(a) - cultPower(b)),
-    [playerPower],
+    [pool, playerPower],
   )
 
   async function fight() {

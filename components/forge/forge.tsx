@@ -10,7 +10,7 @@ import { num } from '@/lib/game/format'
 import { CultCardView } from '@/components/cards/cult-card'
 import { CultButton, CultLink } from '@/components/ui-kit/cult-button'
 import { Modal } from '@/components/ui-kit/modal'
-import { EmptyState, Panel, RarityBadge, SimulatedTag } from '@/components/ui-kit/primitives'
+import { EmptyState, Panel, RarityBadge } from '@/components/ui-kit/primitives'
 import { Particles } from '@/components/ui-kit/particles'
 import { cn } from '@/lib/utils'
 
@@ -143,7 +143,6 @@ export function Forge() {
           <h2 id="inventory" className="font-display text-xl font-bold uppercase tracking-wide">
             Inventory · <span data-rarity={input} className="rarity-text">{RARITY_META[input].label}</span>
           </h2>
-          <SimulatedTag />
         </div>
         {pool.length === 0 ? (
           <div className="mt-4">

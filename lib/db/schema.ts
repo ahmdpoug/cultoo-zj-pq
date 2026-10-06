@@ -13,6 +13,7 @@ export const players = pgTable('players', {
   walletAddress: text('wallet_address'),
   mainCardId: text('main_card_id'),
   guildId: text('guild_id'),
+  balance: bigint('balance', { mode: 'number' }).notNull().default(0),
   materials: integer('materials').notNull().default(0),
   fragments: integer('fragments').notNull().default(0),
   seasonXp: integer('season_xp').notNull().default(0),

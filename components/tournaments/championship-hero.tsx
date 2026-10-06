@@ -4,9 +4,8 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { Crown } from 'lucide-react'
-import { LEADERBOARD, SEASON } from '@/lib/data/world'
+import { useLeaderboard } from '@/hooks/use-data'
 import { useGame, useMounted } from '@/hooks/use-game'
-import { seasonRank } from '@/lib/game/season'
 import { compact, num } from '@/lib/game/format'
 import { Eyebrow, RarityBadge } from '@/components/ui-kit/primitives'
 import { Particles } from '@/components/ui-kit/particles'
@@ -29,14 +28,14 @@ function useCountdown(target: number) {
   return mounted ? parts : null
 }
 
-const FEATURED = ['alpha', 'trader', 'builder', 'meme', 'researcher']
-
 export function ChampionshipHero() {
-  const time = useCountdown(SEASON.endsAt)
-  const { hasPlayer, totalPower } = useGame()
+  const { data } = useLeaderboard()
+  const season = data?.season
+  const time = useCountdown(season?.endsAt ?? 0)
+  const { hasPlayer } = useGame()
   const mounted = useMounted()
-  const myRank = hasPlayer ? seasonRank(totalPower) : null
-  const featured = FEATURED.map((h) => LEADERBOARD.find((e) => e.handle === h)!).filter(Boolean)
+  const myRank = data?.myRank ?? null
+  const featured = (data?.entries ?? []).slice(0, 5)
 
   return (
     <section className="relative overflow-hidden rounded-3xl border border-white/[0.07] bg-[radial-gradient(70%_90%_at_70%_40%,oklch(0.3_0.15_296/0.5),transparent_70%)]">
@@ -44,10 +43,10 @@ export function ChampionshipHero() {
       <Particles count={30} seed="championship" />
       <div className="relative grid gap-8 p-6 sm:p-10 lg:grid-cols-[1.2fr_1fr] lg:items-center">
         <div>
-          <Eyebrow>{SEASON.label}</Eyebrow>
+          <Eyebrow>{season?.label ?? 'Genesis — Season 01'}</Eyebrow>
           <h2 className="mt-4 font-display text-4xl font-bold uppercase leading-none tracking-tight metal-text text-balance sm:text-6xl">CULT CT Championship</h2>
           <p className="mt-4 max-w-lg text-muted-foreground">
-            The top {SEASON.qualifyTop} of the CULT 100 at season end qualify for the final tournament. One card leaves as CT Champion.
+            The top {season?.qualifyTop ?? 100} of the CULT 100 at season end qualify for the final tournament. One card leaves as CT Champion.
           </p>
 
           <div className="mt-8 grid grid-cols-4 gap-2 sm:max-w-md" aria-label="Time remaining" role="timer">
@@ -62,24 +61,24 @@ export function ChampionshipHero() {
           <dl className="mt-6 grid grid-cols-3 gap-4 sm:max-w-md">
             <div>
               <dt className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Players</dt>
-              <dd className="font-display text-xl font-bold tabular-nums">{num(SEASON.players)}</dd>
+              <dd className="font-display text-xl font-bold tabular-nums">{season ? num(season.players) : '—'}</dd>
             </div>
             <div>
               <dt className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Prize pool</dt>
-              <dd className="font-display text-xl font-bold tabular-nums">{compact(SEASON.prizePool)} $CULT</dd>
+              <dd className="font-display text-xl font-bold tabular-nums">{season ? compact(season.prizePool) : '—'} $CULT</dd>
             </div>
             <div>
               <dt className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground">Your rank</dt>
               <dd className="font-display text-xl font-bold tabular-nums text-primary">{mounted && myRank ? `#${num(myRank)}` : '—'}</dd>
             </div>
           </dl>
-          {mounted && myRank && (
+          {mounted && myRank && season && (
             <p className="mt-3 text-sm text-muted-foreground">
-              {myRank <= SEASON.qualifyTop ? 'You are currently qualified for the final.' : `Climb ${num(myRank - SEASON.qualifyTop)} places to qualify.`}
+              {myRank <= season.qualifyTop ? 'You are currently qualified for the final.' : `Climb ${num(myRank - season.qualifyTop)} places to qualify.`}
             </p>
           )}
           {mounted && !hasPlayer && (
-            <CultLink href="/scan?demo=1" className="mt-6">
+            <CultLink href="/scan" className="mt-6">
               Join the Season
             </CultLink>
           )}

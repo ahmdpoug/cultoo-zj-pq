@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { ArrowUpCircle, Gem, RefreshCw, Share2, Swords, History } from 'lucide-react'
 import type { CultCard } from '@/lib/types'
 import { useGame } from '@/hooks/use-game'
+import { useLeaderboard } from '@/hooks/use-data'
 import { services, UPGRADE_COST, InsufficientBalanceError } from '@/lib/services'
 import { CultCardView } from '@/components/cards/cult-card'
 import { ShareModal } from '@/components/cards/share-modal'
@@ -17,11 +18,11 @@ import { Modal } from '@/components/ui-kit/modal'
 import { Panel, RarityBadge, StatBar, StatTile } from '@/components/ui-kit/primitives'
 import { compact, num, timeAgo } from '@/lib/game/format'
 import { cultPower, winRate } from '@/lib/game/scoring'
-import { seasonRank } from '@/lib/game/season'
 
 export function MyCardDashboard({ card }: { card: CultCard }) {
   const router = useRouter()
   const { state } = useGame()
+  const { data: board } = useLeaderboard()
   const [flipped, setFlipped] = useState(false)
   const [shareOpen, setShareOpen] = useState(false)
   const [nftOpen, setNftOpen] = useState(false)
@@ -31,7 +32,7 @@ export function MyCardDashboard({ card }: { card: CultCard }) {
   const [levelUp, setLevelUp] = useState<number | null>(null)
 
   const power = cultPower(card)
-  const rank = seasonRank(power)
+  const myRank = board?.myRank ?? null
 
   async function upgrade() {
     setUpgrading(true)
@@ -92,7 +93,7 @@ export function MyCardDashboard({ card }: { card: CultCard }) {
 
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           <StatTile label="Cult Power" value={num(power)} />
-          <StatTile label="Season Rank" value={`#${num(rank)}`} hint={rank <= 100 ? 'Championship qualified' : 'Top 100 qualifies'} />
+          <StatTile label="Season Rank" value={myRank ? `#${num(myRank)}` : '—'} hint={myRank && myRank <= 100 ? 'Championship qualified' : 'Top 100 qualifies'} />
           <StatTile label="Battle Record" value={`${card.wins}W / ${card.losses}L`} hint={`${winRate(card)}% win rate`} />
           <StatTile label="Season XP" value={num(state.economy.seasonXp)} />
         </div>

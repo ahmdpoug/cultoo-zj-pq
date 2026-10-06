@@ -1,5 +1,5 @@
 import { Crown, Flame, Hammer, Lock, ScanLine, Star, Swords, Trophy } from 'lucide-react'
-import { ACHIEVEMENTS } from '@/lib/data/world'
+import { ACHIEVEMENTS } from '@/lib/game/config'
 import { cn } from '@/lib/utils'
 
 const ICONS: Record<string, typeof Star> = {
