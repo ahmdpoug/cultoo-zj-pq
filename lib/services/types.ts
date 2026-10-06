@@ -1,0 +1,70 @@
+import type { BattleRecord, CultCard, Listing, Rarity, TxReceipt, XProfile } from '@/lib/types'
+
+/**
+ * Contracts for every external capability. The UI only talks to these interfaces.
+ * Swap `lib/services/mock/*` for real implementations (X API, wagmi/viem, contracts)
+ * in `lib/services/index.ts` without touching components.
+ */
+
+export interface SocialService {
+  /** Fetch an X profile. Mock: deterministic generator. Real: X API v2 via a route handler. */
+  getProfile(handle: string): Promise<XProfile>
+  /** Build a share URL for X's web intent (free, no API key required). */
+  shareUrl(text: string, url?: string): string
+}
+
+export interface WalletService {
+  connect(): Promise<string>
+  disconnect(): Promise<void>
+}
+
+export interface TokenService {
+  /** $CULT is a conceptual in-game utility currency in this demo. */
+  balanceOf(address: string | null): number
+  spend(amount: number, reason: string): Promise<TxReceipt>
+}
+
+export interface NFTService {
+  mint(cardId: string): Promise<TxReceipt>
+}
+
+export interface MarketplaceService {
+  buy(listing: Listing): Promise<{ receipt: TxReceipt; card: CultCard }>
+}
+
+export interface ForgeService {
+  forge(cardIds: string[]): Promise<{ receipt: TxReceipt; card: CultCard }>
+  upgrade(cardId: string): Promise<{ receipt: TxReceipt; levelsGained: number }>
+}
+
+export interface ArenaService {
+  battle(playerCardId: string, opponent: CultCard): Promise<BattleRecord & { levelsGained: number }>
+}
+
+export interface TournamentService {
+  enter(tournamentId: string, entry: number): Promise<TxReceipt>
+}
+
+export interface OnboardingService {
+  createPlayer(handle: string, opts?: { demo?: boolean }): Promise<{ card: CultCard; profile: XProfile }>
+}
+
+export interface CultServices {
+  social: SocialService
+  wallet: WalletService
+  token: TokenService
+  nft: NFTService
+  marketplace: MarketplaceService
+  forge: ForgeService
+  arena: ArenaService
+  tournament: TournamentService
+  onboarding: OnboardingService
+}
+
+export class InsufficientBalanceError extends Error {
+  constructor(public needed: number) {
+    super(`Insufficient $CULT balance. ${needed} required.`)
+  }
+}
+
+export type ForgeRecipe = { input: Rarity; count: number; output: Rarity }
