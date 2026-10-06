@@ -1,87 +1,84 @@
-#!/usr/bin/env python3
-"""Builds the CULT brand assets from scripts/brand/cult-logo-source.png.
+"""Builds the CULT brand assets from the source logo.
 
-The source is bone letters on pure black. Luminance becomes alpha, so the soft
-smudge where letters overlap survives on any dark surface.
-
-Usage (needs Pillow + numpy):  python3 scripts/brand/build-brand-assets.py
+The logo is a two-colour wordmark (cream on black), so palette PNG with alpha
+compresses far better than WebP here. Run with the throwaway venv:
+  /tmp/imgenv/bin/python scripts/brand/build-brand-assets.py
 """
+
 from pathlib import Path
 
 import numpy as np
-from PIL import Image, ImageDraw
+from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[2]
-SRC = ROOT / "scripts/brand/cult-logo-source.png"
-BRAND_DIR = ROOT / "public/brand"
-APP_DIR = ROOT / "app"
-
-BONE = (240, 238, 224)  # sampled from the logo: #f0eee0
-CREAM_LUMINANCE = 236.0  # mean luminance of the cream letters
-
-PAD = 6
-WORD_BOX = (282 - PAD, 225 - PAD, 1309 + PAD + 1, 750 + PAD + 1)
-C_BOX = (282 - PAD, 225 - PAD, 604, 750 + PAD + 1)
-
-source = Image.open(SRC).convert("RGB")
-alpha = np.clip(np.asarray(source).astype(np.float32).mean(axis=2) / CREAM_LUMINANCE, 0, 1)
+SRC = ROOT / "scripts" / "brand" / "cult-logo-source.png"
+BRAND = ROOT / "public" / "brand"
+CREAM = (240, 238, 224)
+BLACK = (0, 0, 0)
+# Alpha ramp: below LO is background, above HI is solid ink. The band between
+# keeps the soft smudge where the letters overlap.
+LO, HI = 40, 200
 
 
-def cutout(box):
-    x0, y0, x1, y1 = box
-    rgba = np.zeros((y1 - y0, x1 - x0, 4), dtype=np.uint8)
-    rgba[..., 0:3] = BONE
-    rgba[..., 3] = (alpha[y0:y1, x0:x1] * 255).round().astype(np.uint8)
+def cutout() -> Image.Image:
+    """Crops the wordmark and returns it as cream RGBA on transparency."""
+    src = Image.open(SRC).convert("RGB")
+    lum = np.asarray(src).astype(float).mean(axis=2)
+    ys, xs = np.where(lum > 40)
+    pad = 6
+    box = (
+        max(0, xs.min() - pad),
+        max(0, ys.min() - pad),
+        min(src.width, xs.max() + pad),
+        min(src.height, ys.max() + pad),
+    )
+    crop = np.asarray(src.crop(box)).astype(float).mean(axis=2)
+    alpha = np.clip((crop - LO) / (HI - LO), 0, 1)
+    rgba = np.zeros((*crop.shape, 4), dtype=np.uint8)
+    rgba[..., 0], rgba[..., 1], rgba[..., 2] = CREAM
+    rgba[..., 3] = (alpha * 255).round().astype(np.uint8)
     return Image.fromarray(rgba, "RGBA")
 
 
-def resized(img, width=None, height=None):
-    if width:
-        height = round(img.height * width / img.width)
-    else:
-        width = round(img.width * height / img.height)
-    return img.resize((width, height), Image.LANCZOS)
+def save_png8(image: Image.Image, path: Path) -> None:
+    """Palette PNG with alpha — smallest encoding for a flat two-colour mark."""
+    image.quantize(colors=32, method=Image.FASTOCTREE).save(path, optimize=True)
+    print(f"{path.relative_to(ROOT)}  {image.width}x{image.height}  {path.stat().st_size / 1024:.1f} KB")
 
 
-def save_webp(img, path):
-    img.save(path, "WEBP", quality=92, alpha_quality=100, method=6)
-    print(f"{path.relative_to(ROOT)}  {img.width}x{img.height}  {path.stat().st_size / 1024:.1f} KB")
+def scaled(image: Image.Image, width: int) -> Image.Image:
+    return image.resize((width, round(image.height * width / image.width)), Image.LANCZOS)
 
 
-def save_png(img, path):
-    img.save(path, "PNG", optimize=True)
-    print(f"{path.relative_to(ROOT)}  {img.width}x{img.height}  {path.stat().st_size / 1024:.1f} KB")
+def main() -> None:
+    BRAND.mkdir(parents=True, exist_ok=True)
+    wordmark = cutout()
+
+    for width in (240, 480):
+        save_png8(scaled(wordmark, width), BRAND / f"cult-wordmark-{width}.png")
+
+    # The "C" doubles as the app mark and favicon.
+    mark = wordmark.crop((0, 0, round(wordmark.width * 0.30), wordmark.height))
+    save_png8(scaled(mark, 128), BRAND / "cult-mark.png")
+
+    icon = Image.new("RGBA", (512, 512), (*BLACK, 255))
+    glyph = scaled(mark, 300)
+    icon.paste(glyph, ((512 - glyph.width) // 2, (512 - glyph.height) // 2), glyph)
+    icon.convert("RGB").save(ROOT / "app" / "icon.png", optimize=True)
+    print(f"app/icon.png  {(ROOT / 'app' / 'icon.png').stat().st_size / 1024:.1f} KB")
+
+    apple = icon.resize((180, 180), Image.LANCZOS)
+    apple.convert("RGB").save(ROOT / "app" / "apple-icon.png", optimize=True)
+    print(f"app/apple-icon.png  {(ROOT / 'app' / 'apple-icon.png').stat().st_size / 1024:.1f} KB")
+
+    # Social card: the wordmark alone on black, matching the logo's own framing.
+    og = Image.new("RGB", (1200, 630), BLACK)
+    hero = scaled(wordmark, 720)
+    og.paste(hero, ((1200 - hero.width) // 2, (630 - hero.height) // 2), hero)
+    og.save(ROOT / "app" / "opengraph-image.png", optimize=True)
+    og.save(ROOT / "app" / "twitter-image.png", optimize=True)
+    print(f"app/opengraph-image.png  {(ROOT / 'app' / 'opengraph-image.png').stat().st_size / 1024:.1f} KB")
 
 
-def icon(size, rounded):
-    canvas = Image.new("RGBA", (size, size), (0, 0, 0, 255))
-    glyph = resized(cutout(C_BOX), height=round(size * 0.66))
-    canvas.alpha_composite(glyph, ((size - glyph.width) // 2, (size - glyph.height) // 2))
-    if rounded:
-        mask = Image.new("L", (size, size), 0)
-        ImageDraw.Draw(mask).rounded_rectangle((0, 0, size - 1, size - 1), radius=round(size * 0.22), fill=255)
-        canvas.putalpha(mask)
-    return canvas
-
-
-def og_image():
-    canvas = Image.new("RGB", (1200, 630), (0, 0, 0))
-    word = resized(cutout(WORD_BOX), width=780)
-    canvas.paste(word, ((1200 - word.width) // 2, (630 - word.height) // 2), word)
-    return canvas
-
-
-BRAND_DIR.mkdir(parents=True, exist_ok=True)
-
-wordmark = cutout(WORD_BOX)
-for width in (240, 480, 960):
-    save_webp(resized(wordmark, width=width), BRAND_DIR / f"cult-wordmark-{width}.webp")
-
-save_webp(resized(cutout(C_BOX), height=192), BRAND_DIR / "cult-mark.webp")
-
-save_png(icon(512, rounded=True), APP_DIR / "icon.png")
-save_png(icon(180, rounded=False).convert("RGB"), APP_DIR / "apple-icon.png")
-
-og = og_image()
-save_png(og, APP_DIR / "opengraph-image.png")
-save_png(og, APP_DIR / "twitter-image.png")
+if __name__ == "__main__":
+    main()

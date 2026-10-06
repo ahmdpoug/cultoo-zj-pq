@@ -5,9 +5,9 @@ import { cn } from '@/lib/utils'
 
 const VARIANTS = {
   primary:
-    'bg-primary text-primary-foreground shadow-[0_0_0_1px_oklch(1_0_0/0.15)_inset,0_10px_30px_-10px_oklch(0.66_0.21_296/0.7)] hover:brightness-110 hover:shadow-[0_0_0_1px_oklch(1_0_0/0.25)_inset,0_14px_40px_-10px_oklch(0.66_0.21_296/0.9)]',
+    'bg-primary text-primary-foreground shadow-[0_0_0_1px_oklch(1_0_0/0.2)_inset,0_10px_30px_-14px_oklch(0.95_0.012_95/0.55)] hover:brightness-105 hover:shadow-[0_0_0_1px_oklch(1_0_0/0.3)_inset,0_14px_40px_-14px_oklch(0.95_0.012_95/0.7)]',
   silver:
-    'bg-gradient-to-b from-white to-zinc-300 text-zinc-950 shadow-[0_10px_30px_-12px_oklch(1_0_0/0.4)] hover:from-white hover:to-zinc-200',
+    'bg-gradient-to-b from-primary to-[oklch(0.82_0.02_95)] text-primary-foreground shadow-[0_10px_30px_-14px_oklch(0.95_0.012_95/0.4)] hover:brightness-105',
   outline: 'glass text-foreground hover:border-white/20 hover:bg-white/[0.06]',
   ghost: 'text-muted-foreground hover:text-foreground hover:bg-white/5',
 } as const
