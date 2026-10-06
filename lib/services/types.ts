@@ -1,13 +1,12 @@
 import type { BattleRecord, CultCard, Listing, Rarity, TxReceipt, XProfile } from '@/lib/types'
 
 /**
- * Contracts for every external capability. The UI only talks to these interfaces.
- * Swap `lib/services/mock/*` for real implementations (X API, wagmi/viem, contracts)
- * in `lib/services/index.ts` without touching components.
+ * Contracts for every external capability. The UI only talks to these interfaces,
+ * implemented against the CULT API in `lib/services/index.ts`.
  */
 
 export interface SocialService {
-  /** Fetch an X profile. Mock: deterministic generator. Real: X API v2 via a route handler. */
+  /** Fetch a live X profile via the X API v2 route handler. */
   getProfile(handle: string): Promise<XProfile>
   /** Build a share URL for X's web intent (free, no API key required). */
   shareUrl(text: string, url?: string): string
@@ -19,7 +18,7 @@ export interface WalletService {
 }
 
 export interface TokenService {
-  /** $CULT is a conceptual in-game utility currency in this demo. */
+  /** $CULT is the in-game utility currency. */
   balanceOf(address: string | null): number
   spend(amount: number, reason: string): Promise<TxReceipt>
 }

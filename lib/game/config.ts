@@ -4,7 +4,7 @@ export const SEASON = {
   id: 'genesis-s01',
   name: 'Genesis',
   label: 'Genesis — Season 01',
-  endsAt: Date.UTC(2026, 6, 1, 18, 0, 0),
+  endsAt: Date.UTC(2027, 3, 1, 18, 0, 0),
   qualifyTop: 100,
 }
 

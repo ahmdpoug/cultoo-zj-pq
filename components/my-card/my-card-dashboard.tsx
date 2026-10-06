@@ -155,7 +155,7 @@ export function MyCardDashboard({ card }: { card: CultCard }) {
       <Modal open={nftOpen} onClose={() => setNftOpen(false)} title={`CULT Card NFT`}>
         <NftDetails card={card} />
         {card.minted ? (
-          <p className="mt-5 text-sm text-success">This card is minted in demo mode.</p>
+          <p className="mt-5 text-sm text-success">This card is minted in your collection.</p>
         ) : (
           <CultButton
             className="mt-5 w-full"

@@ -60,7 +60,7 @@ function PrivyBridge({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!ready || !xUsername || syncedFor.current === xUsername) return
     syncedFor.current = xUsername
-    void syncMainCard()
+    void syncMainCard().catch(() => {})
   }, [ready, xUsername, privyId])
 
   const value: CultAuth = useMemo(

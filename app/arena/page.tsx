@@ -8,7 +8,7 @@ export default function ArenaPage() {
   return (
     <>
       <PageHeader eyebrow="Sector 02" title="The Arena" subtitle="Select your card. Challenge another. Three rounds of stats decide who walks out." />
-      <PlayerGate message="You need a card to fight. Scan your CT or enter demo mode.">{(card) => <Arena mainCard={card} />}</PlayerGate>
+      <PlayerGate message="You need a card to fight. Scan your CT to strike one.">{(card) => <Arena mainCard={card} />}</PlayerGate>
     </>
   )
 }
